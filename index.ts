@@ -161,9 +161,17 @@ function initMap(): void {
     // });
 
       const similarityPercentage1to3 = calculateSimilarity(flightPath1, flightPath3);
-      const similarityPercentage2to4 = calculateSimilarity(flightPath2, flightPath4);
-      document.getElementById("similarity-percentage-1to3").innerText = `Percentage Similarity (1 to 3): ${similarityPercentage1to3.toFixed(2)}%`;
-      document.getElementById("similarity-percentage-2to3").innerText = `Percentage Similarity (2 to 4): ${similarityPercentage2to4.toFixed(2)}%`;
+    const similarityPercentage2to4 = calculateSimilarity(flightPath2, flightPath4);
+
+    const intentPercentage1 = similarityPercentage1to3 / (similarityPercentage1to3 + similarityPercentage2to4) * 100;
+    const intentPercentage2 = similarityPercentage2to4 / (similarityPercentage1to3 + similarityPercentage2to4) * 100;
+
+    document.getElementById("similarity-percentage-1to3").innerText = `Percentage Similarity (1 to 3): ${similarityPercentage1to3.toFixed(2)}%`;
+    document.getElementById("similarity-percentage-2to3").innerText = `Percentage Similarity (2 to 4): ${similarityPercentage2to4.toFixed(2)}%`;
+
+    // Display intent percentages on the web page
+    document.getElementById("intent-percentage-1").innerText = `Intent Percentage for Goal 1: ${intentPercentage1.toFixed(2)}%`;
+    document.getElementById("intent-percentage-2").innerText = `Intent Percentage for Goal 2: ${intentPercentage2.toFixed(2)}%`;
     } catch (error) {
       console.error("Error during route calculation: " + error);
     }
