@@ -45,10 +45,19 @@ function initMap(): void {
     strokeOpacity: .5
   });
 
+  const aiPath3 = new google.maps.Polyline({
+    path: [],
+    geodesic: true,
+    strokeColor: '#FFC0CB',//pink
+    strokeOpacity: .8
+  });
+
   flightPath1.setMap(map);
   flightPath2.setMap(map);
   flightPath3.setMap(map);
   flightPath4.setMap(map);
+  aiPath3.setMap(map);
+
 
   const searchButton = document.getElementById("searchButton") as HTMLElement;
 
@@ -131,6 +140,9 @@ function initMap(): void {
         document.getElementById("end2") as HTMLInputElement, 
         flightPath4);
 
+      //DRAW AI LINE
+      loadDirections(map, aiPath3);
+
       midMarker.setPosition(marker.getPosition() as google.maps.LatLng);
 
       // Wait for both promises to resolve
@@ -160,18 +172,21 @@ function initMap(): void {
     //   });
     // });
 
-      const similarityPercentage1to3 = calculateSimilarity(flightPath1, flightPath3);
+    const similarityPercentage1to3 = calculateSimilarity(flightPath1, flightPath3);
     const similarityPercentage2to4 = calculateSimilarity(flightPath2, flightPath4);
+    const similarityPercentage3 = calculateSimilarity(flightPath1, aiPath3);
 
     const intentPercentage1 = similarityPercentage1to3 / (similarityPercentage1to3 + similarityPercentage2to4) * 100;
     const intentPercentage2 = similarityPercentage2to4 / (similarityPercentage1to3 + similarityPercentage2to4) * 100;
 
-    document.getElementById("similarity-percentage-1to3").innerText = `Percentage Similarity (1 to 3): ${similarityPercentage1to3.toFixed(2)}%`;
-    document.getElementById("similarity-percentage-2to3").innerText = `Percentage Similarity (2 to 4): ${similarityPercentage2to4.toFixed(2)}%`;
+    document.getElementById("similarity-percentage-1to3").innerText = `Similarity 1: ${similarityPercentage1to3.toFixed(2)}%`;
+    document.getElementById("similarity-percentage-2to3").innerText = `Similarity 2: ${similarityPercentage2to4.toFixed(2)}%`;
+    
+    document.getElementById("similarity3").innerText = `Similarity 1: ${similarityPercentage3.toFixed(2)}%`;
 
     // Display intent percentages on the web page
-    document.getElementById("intent-percentage-1").innerText = `Intent Percentage for Goal 1: ${intentPercentage1.toFixed(2)}%`;
-    document.getElementById("intent-percentage-2").innerText = `Intent Percentage for Goal 2: ${intentPercentage2.toFixed(2)}%`;
+    document.getElementById("intent-percentage-1").innerText = `Goal 1: ${intentPercentage1.toFixed(2)}%`;
+    document.getElementById("intent-percentage-2").innerText = `Goal 2: ${intentPercentage2.toFixed(2)}%`;
     } catch (error) {
       console.error("Error during route calculation: " + error);
     }
@@ -194,6 +209,148 @@ function initMap(): void {
     onChangeHandler();
   });
 }
+
+async function loadDirections(map: google.maps.Map, flightPath: google.maps.Polyline): Promise<void> {
+  try {
+    for (let i = 1; i <= 5; i++) {
+      const response = await fetch(`direction${i}.txt`);
+      const routeText = await response.text();
+
+      await parseDirections(map, routeText);
+    }
+
+    // Display only the shortest route after all routes are loaded
+    if (shortestRouteResponse) {
+      await parseAndDisplayDirections(map, shortestRouteResponse.routeText, shortestRouteResponse.routeColor, flightPath);
+    }
+  } catch (error) {
+    console.error('Error loading directions:', error);
+  }
+}
+
+
+let shortestRouteLength: number = Infinity;
+let shortestRouteResponse: { routeText: string, routeColor: string } | null = null;
+
+async function parseDirections(map: google.maps.Map, routeText: string): Promise<void> {
+  const routeColor = '#FF0000'; 
+
+  const coordinates = parseCoordinates(routeText);
+
+  if (coordinates.length >= 2) {
+    const routeLength = await calculateRouteLength(coordinates);
+
+    if (routeLength < shortestRouteLength) {
+      shortestRouteLength = routeLength;
+      shortestRouteResponse = { routeText, routeColor };
+    }
+  } else {
+    console.error("At least two valid coordinates are required for directions.");
+  }
+}
+
+// Modify the parseAndDisplayDirections function
+async function parseAndDisplayDirections(map: google.maps.Map, routeText: string, routeColor: string, flightPath: google.maps.Polyline): Promise<void> {
+  const coordinates = parseCoordinates(routeText);
+
+  if (coordinates.length >= 2) {
+    await calculateAndDisplayDirections(map, coordinates, routeColor, flightPath);
+  } else {
+    console.error("At least two valid coordinates are required for directions.");
+  }
+}
+
+function parseCoordinates(routeText: string): google.maps.LatLngLiteral[] {
+  const regex = /\((-?\d+\.\d+),\s*(-?\d+\.\d+)\)/g;
+  let match;
+  const parsedCoordinates: google.maps.LatLngLiteral[] = [];
+
+  while ((match = regex.exec(routeText)) !== null) {
+    const lat = parseFloat(match[1]);
+    const lng = parseFloat(match[2]);
+
+    if (!isNaN(lat) && !isNaN(lng)) {
+      parsedCoordinates.push({ lat, lng });
+    }
+  }
+
+  return parsedCoordinates;
+}
+
+async function calculateAndDisplayDirections(
+  map: google.maps.Map,
+  coordinates: google.maps.LatLngLiteral[],
+  routeColor: string,
+  flightPath: google.maps.Polyline
+): Promise<void> {
+  const directionsService = new google.maps.DirectionsService();
+  const directionsRenderer = new google.maps.DirectionsRenderer({
+    map,
+    suppressMarkers: true,
+    polylineOptions: {
+      strokeColor: `${routeColor}80`,
+      strokeOpacity: 0
+    },
+  });
+
+  const waypoints = coordinates.slice(1, -1).map(coord => ({
+    location: new google.maps.LatLng(coord.lat, coord.lng),
+    stopover: false,
+  }));
+
+  return new Promise<void>((resolve, reject) => {
+    directionsService.route(
+      {
+        origin: coordinates[0],
+        destination: coordinates[coordinates.length - 1],
+        waypoints,
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      async (response, status) => {
+        if (status === 'OK' && response) {
+       
+            directionsRenderer.setDirections(response);
+            const route = response.routes[0];
+            const path = route.overview_path.map((point) => ({ lat: point.lat(), lng: point.lng() }));
+            flightPath.setPath(path);
+          
+          resolve();
+        } else {
+          window.alert(`Directions request failed due to ${status}`);
+          reject();
+        }
+      }
+    );
+  });
+}
+
+async function calculateRouteLength(response: any): Promise<number> {
+  let totalDistance = 0;
+
+  if (response.routes && response.routes.length > 0) {
+    const route = response.routes[0];
+
+    if (route.legs && route.legs.length > 0) {
+      route.legs.forEach((leg: any) => {
+        if (leg.steps && leg.steps.length > 0) {
+          leg.steps.forEach((step: any) => {
+            if (step.distance && step.distance.value) {
+              totalDistance += step.distance.value;
+            }
+          });
+        }
+      });
+    }
+  }
+
+  // Convert the total distance to your desired unit (e.g., meters to kilometers)
+  const totalDistanceInKm = totalDistance / 1000;
+
+  return totalDistanceInKm;
+}
+
+
+
 
 function calculateAndDisplayRoute(
   directionsService: google.maps.DirectionsService,
