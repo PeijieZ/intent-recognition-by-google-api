@@ -1,17 +1,9 @@
-
-/* 
- * Always set the map height explicitly to define the size of the div element
- * that contains the map. 
- */
 #map {
   height: 100%;
 }
 
-/* 
- * Optional: Makes the sample page fill the window. 
- */
-html,
-body {
+/* Optional: Makes the sample page fill the window. */
+html, body {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -23,10 +15,54 @@ body {
   left: 25%;
   z-index: 5;
   background-color: #fff;
-  padding: 5px;
+  padding: 10px;
   border: 1px solid #999;
   text-align: center;
   font-family: "Roboto", "sans-serif";
-  line-height: 30px;
-  padding-left: 10px;
+}
+
+#floating-panel b {
+  display: block;
+  margin-bottom: 5px;
+}
+
+#searchButton {
+  margin-top: 10px;
+}
+
+#percentage-display {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: white;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+#percentage-display div {
+  margin-top: 10px;
+}
+
+/* Add styles for the legend */
+#legend {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: white;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
 }
