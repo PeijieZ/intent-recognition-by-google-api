@@ -17,16 +17,42 @@
     <b>End 2: </b>
     <input type="text" id="end2" placeholder="Enter end location 2" value="Farringdon Station London">
 
-    <div id="percentage-display">
-    <p id="similarity-percentage-1to3">Percentage Similarity (1 to 3): N/A</p>
-    <p id="similarity-percentage-2to3">Percentage Similarity (2 to 3): N/A</p>
-  </div>
-  <button id="searchButton">Search Route</button>
+    <button id="searchButton">Search Route</button>
   </div>
 
   <div id="map"></div>
 
-  
+  <div id="percentage-display">
+    Google Map
+    <p id="similarity-percentage-1to3">Similarity 1: N/A</p>
+    <p id="similarity-percentage-2to3">Similarity 2: N/A</p>
+    <div id="intent-percentage-1">Goal 1: N/A</div>
+    <div id="intent-percentage-2">Goal 2: N/A</div>
+  </div>
+
+  <div id="legend">
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #FF0000;"></div>
+      Google Base 1
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #00FF00;"></div>
+      Google Base 2
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #0000FF;"></div>
+      Google 1 observer
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #FF00FF;"></div>
+      Google 2 observer
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #FFC0CB;"></div>
+      AI Path 1
+    </div>
+  </div>
+
 
   <script src="https://maps.googleapis.com/maps/api/js?key=KEY&callback=initMap&v=weekly" defer></script>
 </body>
